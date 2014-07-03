@@ -1,12 +1,20 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship, backref
 
 ENGINE = None
 Session = None
 
+ENGINE = create_engine("sqlite:///ratings.db", echo = False)
+session = scoped_session(sessionmaker(bind = ENGINE,
+                                    autocommit = False,
+                                    autoflush = False))
+
 Base = declarative_base()
+Base.query = session.query_property()
 
 ### Class declarations go here
 class User(Base):
@@ -28,23 +36,18 @@ class Movies(Base):
 
 class Ratings(Base):
     __tablename__ = "ratings"
-
     id = Column(Integer, primary_key = True)
     movie_id = Column(Integer, nullable=False)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     rating = Column(Integer, nullable=True)
 
-
+    user = relationship("User", backref=backref("ratings", order_by=id))
 ### End class declarations
 
+
+
 def connect():
-    global ENGINE
-    global Session
-
-    ENGINE = create_engine("sqlite:///ratings.db", echo=True)
-    Session = sessionmaker(bind=ENGINE)
-
-    return Session()
+  pass
 
 def main():
     """In case we need this for something"""
