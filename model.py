@@ -26,6 +26,14 @@ class User(Base):
     age = Column(Integer, nullable=True)
     zipcode = Column(String(15), nullable=True)
 
+    def add_user(self):
+        session.add(self)
+        session.commit()
+
+    def query_user_record(self, email):
+        user = session.query(User).filter_by(email=email).all()
+        return user.id
+
 class Movies(Base):
     __tablename__ = "Movies"
 
@@ -37,13 +45,16 @@ class Movies(Base):
 class Ratings(Base):
     __tablename__ = "ratings"
     id = Column(Integer, primary_key = True)
-    movie_id = Column(Integer, nullable=False)
+    movie_id = Column(Integer, ForeignKey('Movies.id'), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     rating = Column(Integer, nullable=True)
 
     user = relationship("User", backref=backref("ratings", order_by=id))
+    movie = relationship("Movies", backref=backref("ratings", order_by=id))
 ### End class declarations
 
+    def get_user_ratings(userid):
+        ratings_object = session.query(Ratings).filter_by(user_id=user_id).all()
 
 
 def connect():
