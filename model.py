@@ -9,12 +9,12 @@ ENGINE = None
 Session = None
 
 ENGINE = create_engine("sqlite:///ratings.db", echo = False)
-session = scoped_session(sessionmaker(bind = ENGINE,
+dbsession = scoped_session(sessionmaker(bind = ENGINE,
                                     autocommit = False,
                                     autoflush = False))
 
 Base = declarative_base()
-Base.query = session.query_property()
+Base.query = dbsession.query_property()
 
 ### Class declarations go here
 class User(Base):
@@ -27,11 +27,11 @@ class User(Base):
     zipcode = Column(String(15), nullable=True)
 
     def add_user(self):
-        session.add(self)
-        session.commit()
+        dbsession.add(self)
+        dbsession.commit()
 
     def query_user_record(self, email):
-        user = session.query(User).filter_by(email=email).all()
+        user = dbsession.query(User).filter_by(email=email).all()
         return user.id
 
 class Movies(Base):
@@ -52,10 +52,6 @@ class Ratings(Base):
     user = relationship("User", backref=backref("ratings", order_by=id))
     movie = relationship("Movies", backref=backref("ratings", order_by=id))
 ### End class declarations
-
-    def get_user_ratings(userid):
-        ratings_object = session.query(Ratings).filter_by(user_id=user_id).all()
-
 
 def connect():
   pass

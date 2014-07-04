@@ -8,7 +8,7 @@ app.jinja_env.undefined = jinja2.StrictUndefined
 
 @app.route("/")
 def index():
-    user_list = model.session.query(model.User).all()
+    user_list = model.dbsession.query(model.User).all()
     return render_template("user_list.html", users = user_list)
 
 @app.route("/login")
@@ -25,40 +25,38 @@ def process_signup():
     password = request.form.get('password')
     age = request.form.get('age')
     zipcode = request.form.get('zipcode')
-    print email
+    #print email
     user_object = model.User(email=email,
                             password=password,
                             age=age, 
                             zipcode=zipcode)
     #call DB commit function
     user_object.add_user()
-    print user_object.id
+    #print user_object.id
     #store userid in browser session and redirect user to logged in page
-    session = {}
     session['userid'] = user_object.id
-    print session['userid']
-    return render_template("movie_ratings.html")
+    return redirect("/movie_ratings")
 
-@app.route("/movie_ratings", methods=["GET"])
-def rating():
-    rating_object = model.Ratings.get_user_ratings(session['userid'])
-    print rating_object
-    return render_template("movie_ratings.html", ratings_object=rating_object)
+@app.route("/movie_ratings")
+def movie_ratings():
+    ratings_object = model.dbsession.query(model.Ratings).filter_by(user_id=session['userid']).all() 
+    return render_template("movie_ratings.html", ratings_object=ratings_object)
 
 @app.route("/login", methods=["POST"])
 def process_login():
     email = request.form.get('email')
     print email
     #print model.session
-    row = model.session.query(model.User).filter_by(email=email).all()
+    row = model.dbsession.query(model.User).filter_by(email=email).one()
     print row
-
+    session['userid'] = row.id
     if row:
         flash("Log in successful")
     else:
         flash("Sorry we could not find your record")
-
-    return render_template("login.html")
+        return render_template("login.html")
+    #return render_template("movie_ratings.html", ratings_object=ratings_object)
+    return redirect("/movie_ratings")
 
 if __name__ == "__main__":
     app.run(debug = True)
